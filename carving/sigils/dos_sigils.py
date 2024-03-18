@@ -24,7 +24,9 @@ class FixedAttackRepeaterSigil(_GenericSigil):
             {"role": "assistant", "content": f"{tokenizer.atk_token * self.glider_size * self.targeted_repeats}"},
         ]
         prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
-        print(f"The constructed prompt, to be optimized is: {prompt}")
+
+        self.print_init_prompt(prompt)
+        
         placeholder_prompt_ids = self.register_prompt_indices(prompt)
 
         target_first_idx = self.attack_indices[self.num_tokens]  # Works here because the n-th atk token should be the first answer
@@ -101,7 +103,7 @@ class AttackRepeaterSigil(RepeaterSigil):
             {"role": "assistant", "content": f"{tokenizer.atk_token * self.num_tokens * self.targeted_repeats}"},
         ]
         prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
-        print(f"The constructed prompt, to be optimized is: {prompt}")
+        self.print_init_prompt(prompt)
         placeholder_prompt_ids = self.register_prompt_indices(prompt)
 
         target_first_idx = self.attack_indices[self.num_tokens]  # Works here because the n-th atk token should be the first answer
@@ -146,7 +148,7 @@ class FixedNaNSigil(_GenericSigil):
         ]
         prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
 
-        print(f"The constructed prompt, to be optimized is: {prompt}")
+        self.print_init_prompt(prompt)
         self.register_prompt_indices(prompt)
         self.register_buffer("target_ids", torch.as_tensor(0).view(-1, 1), persistent=False)  # placeholder
 
@@ -196,7 +198,7 @@ class FixedActNaNSigil(_GenericSigil):
             {"role": "assistant", "content": " "},
         ]
         prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
-        print(f"The constructed prompt, to be optimized is: {prompt}")
+        self.print_init_prompt(prompt)
         self.register_prompt_indices(prompt)
         self.register_buffer("target_ids", torch.as_tensor(0).view(-1, 1), persistent=False)  # placeholder
 
@@ -264,7 +266,7 @@ class DDOSSigil(ContextTargetSigil):
             {"role": "assistant", "content": target_prompt},
         ]
         prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
-        print(f"The constructed prompt, to be optimized is: {prompt}")
+        self.print_init_prompt(prompt)
         self.register_prompt_indices(prompt)
         # Start measuring on the 2nd block
         self.register_target_indices(prompt, target_prompt)

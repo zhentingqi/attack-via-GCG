@@ -38,7 +38,7 @@ class GoodAssistantSigil(ContextTargetSigil):
             {"role": "assistant", "content": f"{target}"},
         ]
         prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
-        print(f"The constructed prompt, to be optimized is: {prompt}")
+        self.print_init_prompt(prompt)
 
         self.register_prompt_indices(prompt)
         self.register_target_indices(prompt, target)

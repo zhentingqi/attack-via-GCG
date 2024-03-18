@@ -245,6 +245,12 @@ class _GenericSigil(torch.nn.Module):
             return embeddings, cache, pos_ids
         else:
             return embeddings, None, pos_ids
+        
+    def print_init_prompt(self, prompt: str):
+        print("==> The constructed prompt to be optimized is:")
+        print("-->")
+        print(f"\033[96m{prompt}\033[0m")
+        print("<--")
 
 
 class FixedTargetSigil(_GenericSigil):
@@ -279,7 +285,7 @@ class FixedTargetSigil(_GenericSigil):
             {"role": "assistant", "content": f"{self.target}"},
         ]
         prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
-        print(f"The constructed prompt, to be optimized is: {prompt}")
+        self.print_init_prompt(prompt)
 
         self.register_prompt_indices(prompt)
         self.register_target_indices(prompt, self.target)
@@ -364,7 +370,7 @@ class FixedCollisionSigil(_GenericSigil):
         ]
         prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
 
-        print(f"The constructed prompt, to be optimized is: {prompt}")
+        self.print_init_prompt(prompt)
         self.register_prompt_indices(prompt)
         self.register_target_indices(prompt, eval_context)
 
@@ -441,10 +447,7 @@ class ContextTargetSigil(_GenericSigil):
         ]
         prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
 
-        print("The constructed prompt, to be optimized is:")
-        print("-->")
-        print(f"\033[96m{prompt}")
-        print("<--")
+        self.print_init_prompt(prompt)
         self.register_prompt_indices(prompt)
         self.register_target_indices(prompt, target)
 
@@ -553,7 +556,7 @@ class ContextMultipleTargetsSigil(ContextTargetSigil):
         ]
         prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
 
-        print(f"The constructed prompt, to be optimized is: {prompt}")
+        self.print_init_prompt(prompt)
         self.register_prompt_indices(prompt)
         self.register_target_indices(prompt, use_target_token_ids=True)
         self._target_cache = dict()
@@ -635,7 +638,7 @@ class ContextCollisionSigil(ContextTargetSigil):
         ]
         prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
 
-        print(f"The constructed prompt, to be optimized is: {prompt}")
+        self.print_init_prompt(prompt)
         self.register_prompt_indices(prompt)
         self.register_target_indices(prompt, target_prompt)
 

@@ -35,7 +35,7 @@ class AlienateSigil(ContextTargetSigil):
             {"role": "assistant", "content": f"{tokenizer.ctx_token * (self.num_context_tokens - self.prompt_cutoff)}"},
         ]
         prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
-        print(f"The constructed prompt, to be optimized is: {prompt}")
+        self.print_init_prompt(prompt)
 
         self.register_prompt_indices(prompt)
         target_first_idx = self.context_indices[self.prompt_cutoff]
@@ -110,7 +110,7 @@ class UnalignmentSigil(ContextTargetSigil):
         ]
         prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
 
-        print(f"The constructed prompt, to be optimized is: {prompt}")
+        self.print_init_prompt(prompt)
         self.register_prompt_indices(prompt)
         self.register_target_indices(prompt, use_target_token_ids=True)
 

@@ -36,7 +36,9 @@ class SpecialTokenContextTargetSigil(ContextTargetSigil):
                 prompt = prompt[:assistant_start] + prompt[assistant_start:].replace(" ", "")
             elif _llama2_chat_whitespace_patch == 2:
                 self.target = prompt[prompt.find("[/INST]") + len("[/INST]") :]
-        print(f"The constructed prompt, to be optimized is: {prompt}")
+                
+        self.print_init_prompt(prompt)
+        
         self.register_prompt_indices(prompt)
         self.register_target_indices(prompt, self.target)
 
@@ -74,7 +76,9 @@ class DividerSigil(ContextTargetSigil):
             {"role": "assistant", "content": f"{tokenizer.ctx_token * (self.num_context_tokens // 2)}"},
         ]
         prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
-        print(f"The constructed prompt, to be optimized is: {prompt}")
+        
+        self.print_init_prompt(prompt)
+        
         placeholder_prompt_ids = self.register_prompt_indices(prompt)
 
         offset = prompt.find(tokenizer.atk_token)

@@ -37,10 +37,8 @@ class RepeaterSigil(ContextTargetSigil):
         messages += [{"role": "assistant", "content": fixed_target + repeated_message + fixed_target_end}]
         prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
 
-        print("The constructed prompt, to be optimized is:")
-        print("-->")
-        print(f"\033[96m{prompt}")
-        print("<--")
+        self.print_init_prompt(prompt)
+        
         placeholder_prompt_ids = self.register_prompt_indices(prompt)
 
         offset = self.num_context_tokens + self.num_tokens  # Search for the repeat only after the offset, this should be made nicer
@@ -97,7 +95,7 @@ class SystemRepeaterSigil(RepeaterSigil):
             {"role": "assistant", "content": fixed_target + f"{tokenizer.ctx_token * self.num_context_tokens}" + fixed_target_end},
         ]
         prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
-        print(f"The constructed prompt, to be optimized is: {prompt}")
+        self.print_init_prompt(prompt)
         placeholder_prompt_ids = self.register_prompt_indices(prompt)
 
         offset = self.num_context_tokens + self.num_tokens  # Search for the repeat only after the offset, this should be made nicer
@@ -144,7 +142,7 @@ class ReverserSigil(ContextTargetSigil):
             reversed_answer = reversed_answer.replace("<|", " <|")
         messages += [{"role": "assistant", "content": fixed_target + reversed_answer + fixed_target_end}]
         prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
-        print(f"The constructed prompt, to be optimized is: {prompt}")
+        self.print_init_prompt(prompt)
 
         placeholder_prompt_ids = self.register_prompt_indices(prompt)
         target_first_idx = tokenizer(prompt, add_special_tokens=False).char_to_token(

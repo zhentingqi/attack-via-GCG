@@ -52,7 +52,7 @@ def main_process(cfg, setup=dict(dtype=torch.float, device=torch.device("cuda"))
 
     result_string = sigil.tokenizer.decode(result_token_ids[0])
     result_token_ids_formatted = ",".join((str(t) for t in result_token_ids[0].tolist()))
-    print(f"\033[92mFinished optimization! Attack is -->\033[0m{result_string}<-- \033[92mwith token ids \033[0m{result_token_ids_formatted}")
+    print(f"\033[92mFinished optimization! Attack is -->\033[0m{result_string}\033[92m<-- with token ids \033[0m{result_token_ids_formatted}")
 
     # Run some eval
     print("==> Running evaluation...")

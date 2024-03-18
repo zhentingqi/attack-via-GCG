@@ -88,9 +88,9 @@ class _GenericOptimizer:
             best_attack_decoded = ""
 
         log.info(
-            f"\033[92mStep: {idx}| Current loss: {loss.item():2.4f}| {it_per_minute:2.4f} it/m| Prompt:\033[0m {attack_decoded}| "
-            f"\033[92m{info} | "
-            f"Best so far:\033[0m {best_attack_decoded}|"
+            f"\033[92mStep: {idx} | Current loss: {loss.item():2.4f} | {it_per_minute:2.4f} it/m | Prompt: \033[0m{attack_decoded}\033[92m | "
+            f"{info} | "
+            f"Best attack so far: -->\033[0m{best_attack_decoded}\033[92m<-- |"
         )
 
         self._timestamp = time.time()
