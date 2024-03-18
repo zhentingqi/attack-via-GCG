@@ -45,14 +45,14 @@ def main_process(cfg, setup=dict(dtype=torch.float, device=torch.device("cuda"))
     else:
         print("==> Looking for checkpoint...")
         initial_guess, initial_step, filepath = carving.utils.look_for_checkpoint(sigil, cfg.impl.look_for_optim_checkpoint)
-        
-    # Actual optimization:
+    
+    # Actual optimization
     print(f"==> Starting optimization with initial guess {initial_guess} and initial step {initial_step}...")
     result_token_ids = optimizer.solve(sigil, initial_guess, initial_step, dryrun=cfg.dryrun, **cfg.impl.optim_settings)
 
     result_string = sigil.tokenizer.decode(result_token_ids[0])
     result_token_ids_formatted = ",".join((str(t) for t in result_token_ids[0].tolist()))
-    print(f"\033[92mFinished optimization! Attack is \033[0m{result_string} \033[92mwith token ids \033[0m{result_token_ids_formatted}")
+    print(f"\033[92mFinished optimization! Attack is -->\033[0m{result_string}<-- \033[92mwith token ids \033[0m{result_token_ids_formatted}")
 
     # Run some eval
     print("==> Running evaluation...")

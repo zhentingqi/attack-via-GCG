@@ -441,7 +441,10 @@ class ContextTargetSigil(_GenericSigil):
         ]
         prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
 
-        print(f"The constructed prompt, to be optimized is: {prompt}")
+        print("The constructed prompt, to be optimized is:")
+        print("-->")
+        print(f"\033[96m{prompt}")
+        print("<--")
         self.register_prompt_indices(prompt)
         self.register_target_indices(prompt, target)
 

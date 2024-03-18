@@ -20,7 +20,7 @@ hydra:
   job:
     chdir: True
 
-seed: # Optional: Set initial seed
+seed: 42 # Optional: Set initial seed
 name: default # A name for this run [will be used for the outputs folder]
 run_id: 0 # Set a run id
 

@@ -43,6 +43,7 @@ def main_launcher(cfg, main_fn, job_name=""):
     # Initialize wandb
     if cfg.wandb.enabled:
         _initialize_wandb(setup, cfg)
+        
     log.info("--------------------------------------------------------------")
     log.info(f"--------------Launching {job_name} run {cfg.name}-{cfg.run_id}! ---------------------")
     log.info(OmegaConf.to_yaml(cfg, resolve=True))
@@ -67,6 +68,7 @@ def main_launcher(cfg, main_fn, job_name=""):
         max_alloc = f"{torch.cuda.max_memory_allocated(setup['device'])/float(1024**3):,.3f} GB"
         max_reserved = f"{torch.cuda.max_memory_reserved(setup['device'])/float(1024**3):,.3f} GB"
         log.info(f"Max. Mem allocated: {max_alloc}. Max. Mem reserved: {max_reserved}.")
+        
     log.info("-----------------Shutdown complete.--------------------------")
 
 
