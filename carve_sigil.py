@@ -8,6 +8,7 @@ This script includes only a small call to check_results after the optimization.
 """
 
 import torch
+
 # from huggingface_hub import login; login()
 
 import hydra
@@ -21,7 +22,7 @@ log = logging.getLogger(__name__)
 
 def main_process(cfg, setup=dict(dtype=torch.float, device=torch.device("cuda"))):
     """This function controls the central routine."""
-    
+
     print("==> Loading model and tokenizer...")
     model, tokenizer = carving.load_model_and_tokenizer(cfg.model, cfg.impl, setup)
     if cfg.aux_models is not None:
@@ -29,7 +30,7 @@ def main_process(cfg, setup=dict(dtype=torch.float, device=torch.device("cuda"))
         aux_models = [carving.load_model_and_tokenizer(model_name, cfg.impl, setup)[0] for model_name in cfg.aux_models]
     else:
         aux_models = None
-        
+
     print("==> Constructing sigil...")
     sigil = carving.sigils.construct(model, tokenizer, cfg.sigil, aux_models, cache_dir=cfg.impl.path)
     sigil.to(**setup)  # Move all parts to GPU here
@@ -45,15 +46,16 @@ def main_process(cfg, setup=dict(dtype=torch.float, device=torch.device("cuda"))
     else:
         print("==> Looking for checkpoint...")
         initial_guess, initial_step, filepath = carving.utils.look_for_checkpoint(sigil, cfg.impl.look_for_optim_checkpoint)
-    
+
     # Actual optimization
     print(f"==> Starting optimization with initial guess {initial_guess} and initial step {initial_step}...")
     result_token_ids = optimizer.solve(sigil, initial_guess, initial_step, dryrun=cfg.dryrun, **cfg.impl.optim_settings)
-
     result_string = sigil.tokenizer.decode(result_token_ids[0])
     result_token_ids_formatted = ",".join((str(t) for t in result_token_ids[0].tolist()))
-    print(f"\033[92mFinished optimization! Attack is -->\033[0m{result_string}\033[92m<-- with token ids \033[0m{result_token_ids_formatted}")
-
+    print(
+        f"\033[92mFinished optimization! Attack is -->\033[0m{result_string}\033[92m<-- with token ids \033[0m{result_token_ids_formatted}"
+    )
+    
     # Run some eval
     print("==> Running evaluation...")
     metrics = carving.eval.check_results(result_string, result_token_ids, sigil, setup=setup, eval_tasks=cfg.eval)
@@ -65,6 +67,7 @@ def main_process(cfg, setup=dict(dtype=torch.float, device=torch.device("cuda"))
             os.remove(filepath)
         except OSError:
             pass
+
     return metrics
 
 

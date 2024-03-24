@@ -44,11 +44,11 @@ class _GenericOptimizer:
         """The main procedure should happen here. The optimizer may access a sigil's .objective and .constraint implementations."""
         raise NotImplementedError()
 
-    def _write_checkpoint(self, sigil, attack_ids, best_attack, idx, depth=2):
+    def _write_checkpoint(self, sigil, attack_ids, best_attack_ids, idx, depth=2):
         checkpoint_data = dict()
         checkpoint_data["steps"] = idx if idx is not None else 0
         checkpoint_data["attack_ids"] = attack_ids[0].tolist()
-        checkpoint_data["best_attack"] = best_attack[0].tolist()
+        checkpoint_data["best_attack_ids"] = best_attack_ids[0].tolist()
         checkpoint_data["uid"] = sigil.uid
 
         target_folder = os.getcwd()
@@ -62,7 +62,7 @@ class _GenericOptimizer:
         self,
         sigil,
         attack_ids: list,
-        best_attack: list,
+        best_attack_ids: list,
         loss: torch.Tensor,
         idx: int,
         info: str = "",
@@ -72,23 +72,24 @@ class _GenericOptimizer:
         """Issued callback from current optimizer to decode and print info. Optionally raise call for intermediate evaluation of prompt"""
 
         if self.save_checkpoint:
-            self._write_checkpoint(sigil, attack_ids, best_attack, idx)
+            self._write_checkpoint(sigil, attack_ids, best_attack_ids, idx)
 
         if hasattr(self, "steps"):
             if idx % (max(1, self.steps // 20)) != 0 and idx != self.steps - 1:
                 return
+            
         time_since_last_callback = time.time() - self._timestamp
         steps_since_last_callback = idx - self._last_seen_step
         it_per_minute = steps_since_last_callback / time_since_last_callback * 60
         attack_decoded = shorten_str(sigil.tokenizer.decode(attack_ids[0]), prompt_cutoff)
 
-        if best_attack is not None:
-            best_attack_decoded = shorten_str(sigil.tokenizer.decode(best_attack[0]), prompt_cutoff)
+        if best_attack_ids is not None:
+            best_attack_decoded = shorten_str(sigil.tokenizer.decode(best_attack_ids[0]), prompt_cutoff)
         else:
             best_attack_decoded = ""
 
         log.info(
-            f"\033[92mStep: {idx} | Current loss: {loss.item():2.4f} | {it_per_minute:2.4f} it/m | Prompt: \033[0m{attack_decoded}\033[92m | "
+            f"\033[92mStep: {idx} | Current loss: {loss.item():2.4f} | {it_per_minute:2.4f} it/m | Attack: \033[0m{attack_decoded}\033[92m | "
             f"{info} | "
             f"Best attack so far: -->\033[0m{best_attack_decoded}\033[92m<-- |"
         )
@@ -103,7 +104,7 @@ class _GenericOptimizer:
             printed_completion = shorten_str(completion_decoded, prompt_cutoff)
 
             result_token_ids_formatted = ",".join((str(t) for t in attack_ids[0].tolist()))
-            best_result_token_ids_formatted = ",".join((str(t) for t in best_attack[0].tolist()))
+            best_result_token_ids_formatted = ",".join((str(t) for t in best_attack_ids[0].tolist()))
 
             log.info(
                 f"Attack:\033[0m {attack_decoded}| \033[92mCompletion:\033[0m {printed_completion}| \033[92mTokens:\033[0m {result_token_ids_formatted}\n"

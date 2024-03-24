@@ -30,18 +30,18 @@ def main_process(cfg, setup=dict(dtype=torch.float, device=torch.device("cpu")))
         result_token_ids = tokenizer(cfg.attack_string, add_special_tokens=False, return_tensors="pt")["input_ids"].to(
             device=setup["device"]
         )
-        print(f"The loaded solution is: {result_string}", end="")
+        print(f"The loaded solution is: -->{result_string}<--", end="")
     elif cfg.attack_ids is not None and len(cfg.attack_ids) > 0:
         result_string = tokenizer.decode(cfg.attack_ids)
         result_token_ids = torch.tensor(cfg.attack_ids)[None].to(device=setup["device"])
-        print(f"The loaded solution is: {result_string}, as decoded from the given attack ids {cfg.attack_ids}", end="")
+        print(f"The loaded solution is: -->{result_string}<--, as decoded from the given attack ids {cfg.attack_ids}", end="")
     elif cfg.output_file is not None:
         # load attack result
         with open(cfg.output_file, "r") as f:
             result = yaml.safe_load(f)
         result_string = result["attack"]
         result_token_ids = torch.tensor([result["attack_ids"]]).to(setup["device"])
-        print(f"The loaded solution is: {result_string}, loaded from file {cfg.output_file}", end="")
+        print(f"The loaded solution is: -->{result_string}<--, loaded from file {cfg.output_file}", end="")
     else:
         raise ValueError(
             "Provide the attack to be evaluated either as attack_string, as attack_ids "

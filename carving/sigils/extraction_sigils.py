@@ -29,8 +29,8 @@ class RepeaterSigil(ContextTargetSigil):
             {"role": "system", "content": full_system_message},
             {"role": "user", "content": f"{tokenizer.ctx_token * self.num_context_tokens} {tokenizer.atk_token * self.num_tokens}"},
         ]
-        bare_prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
         if not skip_special_tokens:
+            bare_prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
             repeated_message = bare_prompt.replace(tokenizer.atk_token, "")
         else:
             repeated_message = full_system_message + f"{tokenizer.ctx_token * self.num_context_tokens}"
@@ -49,17 +49,21 @@ class RepeaterSigil(ContextTargetSigil):
         self.register_buffer("loss_indices", self.target_indices - 1, persistent=False)  # Compute loss here
 
     def _objective_impl(self, inputs_embeds, mask=None, state=None):
+        """Shapes:
+        input_embeds: [1, 32, 4096]
+        mask: [1, 32], all Trues
+        """
         with torch.no_grad():
-            _, _, prompt_ids = self.make_prompt_with_target(None, batch_size=self.batch_size, state=state)
-            prompt_embeds = self.embedding(prompt_ids)
-            mask, pos_ids = self._maybe_create_mask(mask, prompt_ids, dtype=prompt_embeds.dtype)
+            _, _, prompt_ids = self.make_prompt_with_target(None, batch_size=self.batch_size, state=state)  # [16, 384]
+            prompt_embeds = self.embedding(prompt_ids)  # [16, 384, 4096]
+            mask, pos_ids = self._maybe_create_mask(mask, prompt_ids, dtype=prompt_embeds.dtype)    # [16, 384]
 
         _, S, H = inputs_embeds.shape
         prompt_embeds[:, self.attack_indices, :] = inputs_embeds.repeat(self.batch_size, 1, 1)
-        prompt_embeds, cache, pos_ids = self._maybe_load_cache(prompt_embeds, mask, pos_ids)
+        prompt_embeds, cache, pos_ids = self._maybe_load_cache(prompt_embeds, mask, pos_ids)    # [16, 235, 4096]
 
-        target_logits = self.model(inputs_embeds=prompt_embeds, attention_mask=mask, past_key_values=cache, position_ids=pos_ids)["logits"]
-        loss = self.loss_fn(target_logits[:, self.loss_indices], prompt_ids[:, self.target_indices])
+        target_logits = self.model(inputs_embeds=prompt_embeds, attention_mask=mask, past_key_values=cache, position_ids=pos_ids)["logits"] #[16, 235, 32000]
+        loss = self.loss_fn(target_logits[:, self.loss_indices], prompt_ids[:, self.target_indices])    # []
         return loss
 
     def make_prompt_with_target(self, input_ids, batch_size=1, state=None):
@@ -129,8 +133,8 @@ class ReverserSigil(ContextTargetSigil):
             {"role": "system", "content": tokenizer.default_system_message},
             {"role": "user", "content": f"{tokenizer.ctx_token * self.num_context_tokens} {tokenizer.atk_token * self.num_tokens}"},
         ]
-        bare_prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
         if not skip_special_tokens:
+            bare_prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
             repeated_message = bare_prompt.replace(tokenizer.atk_token, "")
         else:
             repeated_message = tokenizer.default_system_message + f"{tokenizer.ctx_token * self.num_context_tokens}"

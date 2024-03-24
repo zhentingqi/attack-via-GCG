@@ -101,8 +101,10 @@ class _GenericSigil(torch.nn.Module):
             mask = input_ids != self.tokenizer.pad_token_id
         else:
             mask = None
+            
         if input_ids is not None and inputs_embeds is None:
             inputs_embeds = self.embedding(input_ids)
+            
         return self._objective_impl(inputs_embeds, state=state, mask=mask)
 
     @property
@@ -248,9 +250,10 @@ class _GenericSigil(torch.nn.Module):
         
     def print_init_prompt(self, prompt: str):
         print("==> The constructed prompt to be optimized is:")
-        print("-->")
+        print("--+")
         print(f"\033[96m{prompt}\033[0m")
-        print("<--")
+        print("+--")
+        
 
 
 class FixedTargetSigil(_GenericSigil):

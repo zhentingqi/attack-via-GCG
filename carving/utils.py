@@ -23,10 +23,13 @@ from omegaconf import open_dict, OmegaConf
 log = logging.getLogger(__name__)
 # os.environ["HYDRA_FULL_ERROR"] = "0"
 
+SAMPLE_MODES = ["sampled", "greedy"]
+
 
 def main_launcher(cfg, main_fn, job_name=""):
     """This is boiler-plate code for a launcher."""
     launch_time = time.time()
+    
     # Set definitive random seed:
     if cfg.seed is None:
         cfg.seed = torch.randint(0, 2**32 - 1, (1,)).item()
@@ -45,7 +48,7 @@ def main_launcher(cfg, main_fn, job_name=""):
         _initialize_wandb(setup, cfg)
         
     log.info("--------------------------------------------------------------")
-    log.info(f"--------------Launching {job_name} run {cfg.name}-{cfg.run_id}! ---------------------")
+    log.info(f"-------------- Launching {job_name} run {cfg.name}-{cfg.run_id}! ---------------------")
     log.info(OmegaConf.to_yaml(cfg, resolve=True))
 
     # Run main function
@@ -53,7 +56,7 @@ def main_launcher(cfg, main_fn, job_name=""):
 
     time_formatted = str(datetime.timedelta(seconds=time.time() - launch_time))
     log.info("-------------------------------------------------------------")
-    log.info(f"Finished running job {cfg.name}-{cfg.run_id} with total time: {time_formatted}")
+    log.info(f"==> Finished running job {cfg.name}-{cfg.run_id} with total time: {time_formatted}")
 
     metrics = sanitize(flatten(metrics))
     if is_main_process():
@@ -61,7 +64,6 @@ def main_launcher(cfg, main_fn, job_name=""):
         # Export to wandb:
         if cfg.wandb.enabled:
             import wandb
-
             wandb.log(dict(metrics))
 
     if torch.cuda.is_available():
@@ -69,7 +71,7 @@ def main_launcher(cfg, main_fn, job_name=""):
         max_reserved = f"{torch.cuda.max_memory_reserved(setup['device'])/float(1024**3):,.3f} GB"
         log.info(f"Max. Mem allocated: {max_alloc}. Max. Mem reserved: {max_reserved}.")
         
-    log.info("-----------------Shutdown complete.--------------------------")
+    log.info("----------------- Shutdown complete. --------------------------")
 
 
 def system_startup(cfg):
@@ -183,9 +185,15 @@ def set_deterministic():
     os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 
 
-def dump_metrics(cfg, metrics):
-    """Simple yaml dump of metric values."""
+def dump_attack_string(cfg, attack_string):
+    """Simple dump of attack string."""
+    filepath = f"attack_{cfg.name}.txt"
+    with open(filepath, "w") as file:
+        file.write(attack_string)
 
+
+def dump_metrics(cfg, metrics):
+    # Simple yaml dump of metric values.
     filepath = f"metrics_{cfg.name}.yaml"
     sanitized_metrics = dict()
     for metric, val in metrics.items():
@@ -195,6 +203,20 @@ def dump_metrics(cfg, metrics):
             sanitized_metrics[metric] = np.asarray(val).tolist()
     with open(filepath, "w") as yaml_file:
         yaml.dump(sanitized_metrics, yaml_file, default_flow_style=False)
+        
+    # Attack recordings
+    m = lambda x: "Best " if x == "sampled" else "" 
+    with open(f"attack_{cfg.name}.txt", "w") as file:
+        file.write(f"==> Attack:" + "\n")
+        file.write(metrics["attack"] + "\n\n")
+        for sample_mode in SAMPLE_MODES:
+            file.write(f"==> For mode {sample_mode}:" + "\n")
+            file.write(f"==> {m(sample_mode)}Scenario, prompt:" + "\n")
+            file.write(metrics[f"prompt_decoded_max ({sample_mode})"] + "\n\n")
+            file.write(f"==> {m(sample_mode)}Scenario, target:" + "\n")
+            file.write(metrics[f"targets_decoded_max ({sample_mode})"] + "\n\n")
+            file.write(f"==> {m(sample_mode)}Scenario, completion:" + "\n")
+            file.write(metrics[f"completion_decoded_max ({sample_mode})"] + "\n\n")
 
 
 def flatten(d, parent_key="", sep="_"):
